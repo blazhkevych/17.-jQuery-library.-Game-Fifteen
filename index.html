@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>Fifteen Game</title>
+  <style>
+    /* CSS styles */
+    body {
+      font-family: Arial, sans-serif;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+
+    .game-board {
+      width: 406px;
+      height: 405px;
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    .game-board div {
+      width: 100px;
+      height: 100px;
+      border: 1px solid black;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      cursor: pointer;
+      line-height: 0;
+      vertical-align: top;
+    }
+
+    .game-info {
+      margin-top: 10px;
+      font-size: 18px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>Fifteen Game</h1>
+    <div class="game-board"></div>
+    <div class="game-info">
+      <p>Time: <span id="timer">0</span> seconds</p>
+    </div>
+    <button onclick="startNewGame()">New Game</button>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+  <script>
+    var timerElement = document.getElementById('timer');
+    var startTime, endTime, timerInterval;
+
+    // Initialize the game
+    startNewGame();
+
+    // Function to start a new game
+    function startNewGame() {
+      clearInterval(timerInterval); // Clear the previous timer
+      startTime = performance.now(); // Start the timer
+      timerInterval = setInterval(updateTimer, 1000); // Update the timer every second
+
+      var board = generateBoard(); // Generate a new game board
+      renderBoard(board); // Render the game board
+    }
+
+    // Function to generate a random game board
+    function generateBoard() {
+      var numbers = Array.from({ length: 15 }, (_, i) => i + 1); // Generate numbers 1 to 15
+      numbers.push(''); // Add an empty space for the last tile
+      numbers.sort(() => Math.random() - 0.5); // Shuffle the numbers
+
+      var board = [];
+      for (var i = 0; i < 4; i++) {
+        var row = numbers.slice(i * 4, i * 4 + 4);
+        board.push(row);
+      }
+
+      return board;
+    }
+
+    // Function to render the game board
+    function renderBoard(board) {
+      var gameBoardElement = $('.game-board');
+      gameBoardElement.empty();
+
+      for (var i = 0; i < 4; i++) {
+        for (var j = 0; j < 4; j++) {
+          var value = board[i][j];
+          var tileElement = $('<div></div>')
+            .text(value)
+            .attr('data-row', i)
+            .attr('data-col', j)
+            .click(moveTile);
+          gameBoardElement.append(tileElement);
+        }
+      }
+    }
+
+    // Function to handle tile movement
+    function moveTile() {
+      var emptyTile = $('.game-board div:empty');
+      var currentTile = $(this);
+      var rowDiff = Math.abs(emptyTile.data('row') - currentTile.data('row'));
+      var colDiff = Math.abs(emptyTile.data('col') - currentTile.data('col'));
+
+      if ((rowDiff === 0 && colDiff === 1) || (rowDiff === 1 && colDiff === 0)) {
+        // Swap the empty tile with the clicked tile
+        emptyTile.text(currentTile.text());
+        currentTile.text('');
+      }
+
+      if (isGameFinished()) {
+        endGame();
+      }
+    }
+
+    // Function to update the timer
+    function updateTimer() {
+      var currentTime = performance.now();
+      var elapsedTime = (currentTime - startTime) / 1000; // Convert to seconds
+      timerElement.textContent = elapsedTime.toFixed(0); // Display one decimal place
+    }
+
+    // Function to check if the game is finished
+    function isGameFinished() {
+      var tiles = $('.game-board div').toArray();
+      var values = tiles.map(tile => parseInt($(tile).text(), 10));
+
+      // Check if the numbers are in order
+      for (var i = 0; i < values.length - 1; i++) {
+        if (values[i] !== i + 1) {
+          return false;
+        }
+      }
+
+      return true;
+    }
+
+    // Function to end the game
+    function endGame() {
+      clearInterval(timerInterval); // Stop the timer
+      endTime = performance.now();
+      var elapsedTime = (endTime - startTime) / 1000; // Calculate total elapsed time
+
+      alert('Congratulations! You finished the game in ' + elapsedTime.toFixed(0) + ' seconds.');
+    }
+  </script>
+</body>
+
+</html>
